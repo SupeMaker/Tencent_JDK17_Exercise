@@ -23,7 +23,7 @@ public class GCTest {
 
 Serial收集器运行示意图：
 
-![深入理解Java虚拟机](img\Serial收集器运行示意图.png)
+![深入理解Java虚拟机](/img/Serial收集器运行示意图.png)
 
 虚拟机参数
 
