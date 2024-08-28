@@ -2,6 +2,8 @@
 
 ## 1.1 测试代码
 
+### 1.1.1 串行版本
+
 ```java
 
 import java.util.Random;
@@ -32,24 +34,73 @@ public class GCTest {
         System.out.println("执行结束!共生成对象次数:" + counter.longValue());
     }
 }
-/*
--XX:+UseSerialGC -Xlog:gc*=info,gc+heap=debug,gc+ergo*=trace,gc+parse=debug,safepoint:log/gc-oomHeap.log:uptime,level,tags -Xms1024M -Xmx1024M -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=heap/heapdump.hprof
-*/
+
 ```
+
+### 1.1.2 并行版本
+
+```java
+public class GCTest {
+    private static Random random = new Random();
+    public static void main(String[] var0) {
+        // 当前毫秒时间戳
+        long startMillis = System.currentTimeMillis();
+        // 持续运行毫秒数; 可根据需要进行修改
+        long timeoutMillis = 30000;
+        // 结束时间戳
+        long endMillis = startMillis + timeoutMillis;
+        LongAdder counter = new LongAdder();
+        System.out.println("正在执行...");
+        int size=2000;
+        Object[] arr = new Object[size];
+        // 设置线程数量
+        int numThreads = 4;
+        // 线程池
+        ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+        for (int i = 0; i < numThreads; i++) {
+            executorService.submit(() -> {
+                while (System.currentTimeMillis() < endMillis) {
+                    int index = random.nextInt(2 * size);
+                    byte[] garbage = new byte[100 * 1024];
+                    if(index < size) {
+                        arr[index] = garbage;
+                    }
+                    counter.increment();
+                }
+            });
+        }
+        executorService.shutdown();
+        while(!executorService.isTerminated()) {
+
+        }
+        System.out.println("执行结束!共生成对象次数:" + counter.longValue());
+    }
+}
+```
+
+
 
 # 2 经典垃圾收集器比较
 
-## 摘要：
+## 串行版本实验结果汇总
 
-| 收集器            | 每次GC的用户线程平均暂停时间/ms | 每次GC的用户线程最大暂停时间/ms | 总暂停时间/s | 总并发时间/s | 吞吐量  |
-| ----------------- | ------------------------------- | ------------------------------- | ------------ | ------------ | ------- |
-| Serial            | 26.7                            | 270                             | 14.304       | 0            | 53.236% |
-| Parallel Scavenge | 28.3                            | 480                             | 19.810       | 没有统计     | 35.612% |
-| G1                | 14.2                            | 130                             | 17.364       | 2.891        | 42.586% |
-| Shenandoah        | 0.291                           | 2.51                            | 0.413        | 6.694        | 98.65%  |
-| ZGC               | 0.0101                          | 0.092                           | 0.00685      | 22.462       | 99.977% |
+| 收集器            | 每次GC的用户线程平均暂停时间/ms | 每次GC的用户线程最大暂停时间/ms | 总暂停时间/s | 总并发时间/s | 吞吐量  | GC次数 |
+| ----------------- | ------------------------------- | ------------------------------- | ------------ | ------------ | ------- | ------ |
+| Serial            | 26.7                            | 270                             | 14.304       | 0            | 53.236% | 535    |
+| Parallel Scavenge | 28.3                            | 480                             | 19.81        | 没有统计     | 35.612% | 699    |
+| G1                | 14                              | 30                              | 2.483        | 0.41         | 38.384% | 165    |
+| Shenandoah        | 0.291                           | 2.51                            | 0.413        | 6.694        | 98.65%  | 355    |
+| ZGC               | 0.0101                          | 0.092                           | 0.00685      | 22.462       | 99.977% | 226    |
 
+## 并行版本实验结果汇总
 
+| 收集器            | 每次GC的用户线程平均暂停时间/ms | 每次GC的用户线程最大暂停时间/ms | 总暂停时间/s | 总并发时间/s | 吞吐量  | GC次数 |
+| ----------------- | ------------------------------- | ------------------------------- | ------------ | ------------ | ------- | ------ |
+| Serial            | 26.2                            | 740                             | 14.717       | 0            | 51.401% | 561    |
+| Parallel Scavenge | 31.2                            | 430                             | 18.360       | 没有统计     | 40.213% | 589    |
+| G1                | 12.9                            | 30                              | 1.996        | 0.475        | 45.855% | 150    |
+| Shenandoah        | 0.276                           | 2.97                            | 0.537        | 11.178       | 98.229% | 486    |
+| ZGC               | 0.0132                          | 0.119                           | 0.00687      | 27           | 99.977% | 174    |
 
 ## 2.1 SerialGC
 
@@ -181,17 +232,17 @@ user 部分表示所有 GC 线程消耗的 CPU 时间；sys 部分表示系统�
 
 ![Serial1](/img/Serial1.png)
 
-新生代(Young Generation) 内存被分配了307.19MB，老年代(Old Generation) 内存被分配了 682.69MB，整个堆的内存被使用了995.5MB。
+新生代(Young Generation) 内存被分配了307.19MB，老年代(Old Generation) 内存被分配了 682.69MB，整个堆的内存被使用了995.81MB。
 
 
 
 ![Serial2](/img/Serial2.png)
 
-Throughput(吞吐量): 在测试中，Serial收集器的吞吐量为 53.236%。
+Throughput(吞吐量): 在测试中，Serial收集器的吞吐量为 51.401%。
 
-Avg Pause GC Time(每次STW的平均时间):26.7ms。
+Avg Pause GC Time(每次STW的平均时间):26.2ms。
 
-Max Pause GC Time(最大STW时间):270ms。
+Max Pause GC Time(最大STW时间):740ms。
 
 
 
@@ -203,9 +254,9 @@ Max Pause GC Time(最大STW时间):270ms。
 
 ![Serial4](/img/Serial4.png)
 
-根据 ‘real’ time时间进行统计，根据 GC Pause Statistics可以看到，Pause total time(总暂停时间)为14.304秒，程序运行的时间为30.588s，则吞吐量：
+根据 ‘real’ time时间进行统计，根据 GC Pause Statistics可以看到，Pause total time(总暂停时间)为14.717秒，程序运行的时间为30.283s，则吞吐量：
 
-吞吐量= （30.588-14.304）/30.588 = 53.236%，跟上面的数据一致。由 GC Average Time(ms)可知，Full GC的平均时间要比 Minor GC的平均时间要长。
+吞吐量= （30.283-14.717）/30.283= 51.401%，跟上面的数据一致。由 GC Average Time(ms)可知，Full GC的平均时间要比 Minor GC的平均时间要长。
 
 
 
@@ -596,6 +647,10 @@ Shenandoah的工作过程大致可以划分为以下九个阶段：
 
 ### 2.4.2 虚拟机参数
 
+```
+-XX:+UseShenandoahGC -Xlog:gc*=info:log/gc-oomHeap.log:uptime,level,tags -Xms1024M -Xmx1024M
+```
+
 ### 2.4.3 日志分析
 
 #### 2.4.3.1 一个GC过程的分析
@@ -753,14 +808,26 @@ public class GCTest {
         System.out.println("正在执行...");
         int size=2000;
         Object[] arr = new Object[size];
-        while (System.currentTimeMillis() < endMillis) {
-            int index = random.nextInt(2*size);
-            int t = random.nextInt(100) > 50? 256:100;
-            byte[] garbage = new byte[t*1024];
-            if(index < size) {
-                arr[index] = garbage;
-            }
-            counter.increment();
+        // 设置线程数量
+        int numThreads = 4;
+        // 线程池
+        ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+        for (int i = 0; i < numThreads; i++) {
+            executorService.submit(() -> {
+                while (System.currentTimeMillis() < endMillis) {
+                    int index = random.nextInt(2*size);
+                    int t = random.nextInt(100) > 50? 256:100;
+                    byte[] garbage = new byte[t*1024];
+                    if(index < size) {
+                        arr[index] = garbage;
+                    }
+                    counter.increment();
+                }
+            });
+        }
+        executorService.shutdown();
+        while(!executorService.isTerminated()) {
+
         }
         System.out.println("执行结束!共生成对象次数:" + counter.longValue());
     }
