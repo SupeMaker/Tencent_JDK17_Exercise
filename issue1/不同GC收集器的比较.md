@@ -503,9 +503,7 @@ Purge Code Roots清理其他部分数据，也是非常快的，如非必要基�
 
 gc过后，新生代的内存从461M变成了438M，耗时0.01s
 
-#### 2.3.3.2 Mixed GC
-
-下面是 Mixed GC的一次完整的流程
+#### 2.3.3.2 并发标记阶段
 
 ```
 [0.451s][info ][gc                ] GC(25) Concurrent Mark Cycle
@@ -529,7 +527,7 @@ gc过后，新生代的内存从461M变成了438M，耗时0.01s
 [0.456s][info ][gc                ] GC(25) Concurrent Mark Cycle 4.802ms
 ```
 
-1. 初始标记实际上是借用 Young GC阶段完成的，Mixed GC也是在Young GC之后触发的，由 GC(8) Pause Young (Concurrent Start) (G1 Humongous Allocation) 可知。
+1. 初始标记实际上是借用 Young GC阶段完成的，由 GC(8) Pause Young (Concurrent Start) (G1 Humongous Allocation) 可知。
 
 2. [0.451s][info ][gc                ] GC(25) Concurrent Mark Cycle
 
@@ -560,9 +558,94 @@ gc过后，新生代的内存从461M变成了438M，耗时0.01s
 
 7. [0.456s][info ][gc                ] GC(25) Concurrent Mark Cycle 4.802ms
 
-Mixed gc结束，耗时4.802ms。
+#### 2.3.3.3 Mixed GC
 
-#### 2.3.3.3 Full GC
+混合GC和Young GC的区别在 Issue2 的文档中已经重点讨论过，这里仅是展示一个完整的 Mixed GC的大致过程。
+
+一个完整的 Mixed GC 需要经历如下阶段：
+
+1. Pause Young (Concurrent Start)并发标记开启前的Young GC
+2. 并发标记 Concurrent Mark Cycle
+3. Pause Young (Normal) (G1 Evacuation Pause)。并发标记过后不一定就会触发Mixed  GC， 有可能是0个或多个普通的 Young GC。
+4.  Pause Young (Prepare Mixed) (G1 Evacuation Pause)。混合GC前的准备阶段
+5. Pause Young (Mixed) (G1 Evacuation Pause)。混合GC阶段
+
+```
+# 并发标记开启前的一个Young GC
+[2.578s][info ][gc,start      ] GC(36) Pause Young (Concurrent Start) (G1 Evacuation Pause)
+...
+[2.601s][debug][gc,ergo,refine] GC(36) Updated Refinement Zones: green: 2560, yellow: 7680, red: 12800
+[2.601s][info ][gc,phases     ] GC(36)   Pre Evacuate Collection Set: 0.2ms
+[2.601s][info ][gc,phases     ] GC(36)   Merge Heap Roots: 0.2ms
+[2.601s][info ][gc,phases     ] GC(36)   Evacuate Collection Set: 12.7ms
+[2.601s][info ][gc,phases     ] GC(36)   Post Evacuate Collection Set: 9.4ms
+[2.601s][info ][gc,phases     ] GC(36)   Other: 0.8ms
+[2.601s][info ][gc,heap       ] GC(36) Eden regions: 43->0(44)
+[2.601s][info ][gc,heap       ] GC(36) Survivor regions: 8->7(7)
+[2.601s][info ][gc,heap       ] GC(36) Old regions: 807->854
+[2.601s][info ][gc,heap       ] GC(36) Archive regions: 2->2
+[2.601s][info ][gc,heap       ] GC(36) Humongous regions: 0->0
+[2.602s][info ][gc            ] GC(36) Pause Young (Concurrent Start) (G1 Evacuation Pause) 858M->861M(1024M) 23.384ms
+[2.602s][info ][gc,cpu        ] GC(36) User=0.12s Sys=0.00s Real=0.02s
+
+# 并发标记阶段开启
+[2.602s][info ][gc            ] GC(37) Concurrent Mark Cycle
+...
+[2.718s][info ][gc            ] GC(37) Concurrent Mark Cycle 115.662ms
+
+# Pause Young普通的Young GC
+[2.682s][info ][gc,start      ] GC(38) Pause Young (Normal) (G1 Evacuation Pause)
+[2.710s][info ][gc,phases     ] GC(38)   Pre Evacuate Collection Set: 0.5ms
+[2.710s][info ][gc,phases     ] GC(38)   Merge Heap Roots: 0.2ms
+[2.710s][info ][gc,phases     ] GC(38)   Evacuate Collection Set: 17.2ms
+[2.710s][info ][gc,phases     ] GC(38)   Post Evacuate Collection Set: 9.8ms
+[2.710s][info ][gc,phases     ] GC(38)   Other: 1.0ms
+[2.710s][info ][gc,heap       ] GC(38) Eden regions: 44->0(122)
+[2.710s][info ][gc,heap       ] GC(38) Survivor regions: 7->7(7)
+[2.710s][info ][gc,heap       ] GC(38) Old regions: 484->534
+[2.710s][info ][gc,heap       ] GC(38) Archive regions: 2->2
+[2.710s][info ][gc,heap       ] GC(38) Humongous regions: 0->0
+[2.710s][info ][gc            ] GC(38) Pause Young (Normal) (G1 Evacuation Pause) 535M->541M(1024M) 28.188ms
+[2.710s][info ][gc,cpu        ] GC(38) User=0.13s Sys=0.00s Real=0.03s
+
+
+# Prepare mixed开启
+[2.729s][info ][gc,start      ] GC(39) Pause Young (Prepare Mixed) (G1 Evacuation Pause)
+...
+[2.792s][debug][gc,ergo,refine] GC(39) Updated Refinement Zones: green: 2560, yellow: 7680, red: 12800
+[2.792s][info ][gc,phases     ] GC(39)   Pre Evacuate Collection Set: 0.3ms
+[2.792s][info ][gc,phases     ] GC(39)   Merge Heap Roots: 0.2ms
+[2.792s][info ][gc,phases     ] GC(39)   Evacuate Collection Set: 38.7ms
+[2.792s][info ][gc,phases     ] GC(39)   Post Evacuate Collection Set: 23.4ms
+[2.792s][info ][gc,phases     ] GC(39)   Other: 0.8ms
+[2.792s][info ][gc,heap       ] GC(39) Eden regions: 122->0(34)
+[2.792s][info ][gc,heap       ] GC(39) Survivor regions: 7->17(17)
+[2.792s][info ][gc,heap       ] GC(39) Old regions: 534->656
+[2.792s][info ][gc,heap       ] GC(39) Archive regions: 2->2
+[2.792s][info ][gc,heap       ] GC(39) Humongous regions: 0->0
+[2.792s][info ][gc            ] GC(39) Pause Young (Prepare Mixed) (G1 Evacuation Pause) 663M->673M(1024M) 63.344ms
+
+# Mixed GC开启
+[2.797s][info ][gc,start      ] GC(40) Pause Young (Mixed) (G1 Evacuation Pause)
+...
+[2.842s][info ][gc,phases     ] GC(40)   Pre Evacuate Collection Set: 0.2ms
+[2.842s][info ][gc,phases     ] GC(40)   Merge Heap Roots: 0.2ms
+[2.842s][info ][gc,phases     ] GC(40)   Evacuate Collection Set: 15.8ms
+[2.842s][info ][gc,phases     ] GC(40)   Post Evacuate Collection Set: 28.1ms
+[2.842s][info ][gc,phases     ] GC(40)   Other: 0.6ms
+[2.842s][info ][gc,heap       ] GC(40) Eden regions: 34->0(44)
+[2.842s][info ][gc,heap       ] GC(40) Survivor regions: 17->7(7)
+[2.842s][info ][gc,heap       ] GC(40) Old regions: 656->609
+[2.842s][info ][gc,heap       ] GC(40) Archive regions: 2->2
+[2.842s][info ][gc,heap       ] GC(40) Humongous regions: 0->0
+
+[2.842s][info ][gc            ] GC(40) Pause Young (Mixed) (G1 Evacuation Pause) 707M->616M(1024M) 44.782ms
+[2.842s][info ][gc,cpu        ] GC(40) User=0.27s Sys=0.03s Real=0.04s
+```
+
+
+
+#### 2.3.3.4 Full GC
 
 G1 是一款自适应的增量垃圾收集器。一般来说，只有在内存严重不足的情况下才会发生 Full GC。比如堆空间不足或者 to-space 空间不足。将每个对象的大小从 100x1024B改成1024x1024B，也就是1M，再进行实验，得到下面的数据。
 
@@ -587,7 +670,7 @@ G1 是一款自适应的增量垃圾收集器。一般来说，只有在内存�
 [1.152s][info ][gc,cpu         ] GC(169) User=0.02s Sys=0.00s Real=0.01s
 ```
 
-#### 2.3.3.4 运行30s后的分析
+#### 2.3.3.5 运行30s后的分析
 
 
 
