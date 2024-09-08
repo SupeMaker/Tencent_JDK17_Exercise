@@ -106,7 +106,7 @@ public class GCTest {
 
 ### 2.1.1 Serial收集器运行示意图：
 
-![Serial收集器运行示意图](/img/Serial收集器运行示意图.png)
+![Serial收集器运行示意图](img/Serial收集器运行示意图.png)
 
 Serial 收集器是一个单线程的收集器，只是用一个处理器或者收集线程去完成垃圾收集工作。它在新生代采用复制算法，在老年代使用标记-整理算法。在工作的时候，必须暂停其他工作的线程，也就是"Stop The World"。
 
