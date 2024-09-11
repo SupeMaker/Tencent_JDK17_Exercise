@@ -4,7 +4,7 @@
 
 ### 六个问题
 
-[问题](#question1)
+[问题1](#question1)
 
 [问题2](#question2)
 
@@ -12,9 +12,6 @@
 
 [问题4](#question4)
 
-[问题5](#question5)
-
-[问题6](#question6)
 
 ### 三个猜想并验证
 
@@ -88,14 +85,14 @@ public class TestLRUG1GCTest {
     }
 
     public static Object generateObject() {
-        int index = random.nextInt(3); // 返回 0, 1, 2
+        int index = random.nextInt(3);
         switch (index) {
             case 0: {
                 // 生成 1M 的对象
                 return new byte[BIG_OBJECT];
             }
             case 1: {
-                // 生成 256 * 1024 k 的对象
+                // 生成 256 * 1024 B 的对象
                 return new byte[SMALL_OBJECT];
             }
             case 2: {
@@ -112,6 +109,12 @@ public class TestLRUG1GCTest {
 
 ## 2 G1回收器
 
+G1收集器的特点：
+
+1. 在G1收集器出现之前的所有收集器，垃圾收集的目标范围要么是整个新生代（Young GC）,要么是整个老年代（Old GC）,再要么就是整个JAVA堆（Full GC），G1面向堆内存任何部分来组成回收集（Collection Set，一般简称CSet）进行回收，以哪块乃村存放的垃圾数量最多，回收收益最大为标准进行回收。
+2. 要实现上面的目标，G1开创了基于Region的堆内存布局，不再坚持固定大小以及固定数量的分代区域划分，而是把连续的Java堆划分为多个大小相等的独立区域（Region）,每个Region都可以根据需要，扮演新生代的Eden空间、Survivor空间或者老年代空间。
+3. 对于Humongous区域。G1认为只要大小超过了一个Region容量一半的对象即可判定为大对象，对于哪些超过整个Region容量的超级大对象，将会被存放在N个连续的Humongous Region之中，G1在大多数时候都会把Humongous Region作为老年代的一部分进行看待。
+
 ### 2.1 新生代收集阶段
 
 G1中有两种回收模式：
@@ -119,24 +122,29 @@ G1中有两种回收模式：
 - 完全新生代GC，只针对新生代的垃圾回收
 - 部分新生代回收，也称为混合回收，收集整个新生代以及部分老年代。
 
-完全新生代GC跟其它的收集器差不多，将整个新生代区域加入到回收集合(Collection Set，简称CSet)，新创建的对象分配至Eden区域，然后将标记存活的对象移动至Survivor区，达到晋升年龄的就晋升到老年代区域，然后清空原区域。详细的日志在[Issue1](https://github.com/SupeMaker/Tencent_JDK17_Exercise/blob/main/不同GC收集器的比较.md)中已经给出，这里不做过多的介绍。这里是简短的日志。
+#### 2.1.1 新生代的日志
+
+完全新生代GC跟其它的收集器差不多，将整个新生代区域加入到回收集合(Collection Set，简称CSet)。新创建的对象分配至Eden区域，然后将标记存活的对象移动至Survivor区，达到晋升年龄的就晋升到老年代区域，之后清空原区域。这里是简短的日志。
 
 ```
 # 开始新生代收集
 [0.331s][info ][gc,start      ] GC(0) Pause Young (Normal) (G1 Evacuation Pause)
 [0.333s][info ][gc,task       ] GC(0) Using 10 workers of 10 for evacuation
+
 # 将全部新生代Eden加入到CSet中
 [0.334s][trace][gc,ergo,cset  ] GC(0) Start choosing CSet. Pending cards: 308 target pause time: 200.00ms
 [0.334s][trace][gc,ergo,cset  ] GC(0) Added young regions to CSet. Eden: 51 regions, Survivors: 0 regions, predicted eden time: 17.75ms, predicted base time: 10.00ms, target pause time: 200.00ms, remaining time: 172.25ms
 [0.334s][debug][gc,ergo       ] GC(0) Running G1 Merge Heap Roots using 10 workers for 51 regions
 [0.383s][debug][gc,ergo       ] GC(0) Running G1 Rebuild Free List Task using 10 workers for rebuilding free list of regions
-# 这里是执行收集的过程
+
+# 这里是执行收集的过程，这里没有展开，详细请看issue1的报告。
 [0.384s][info ][gc,phases     ] GC(0)   Pre Evacuate Collection Set: 0.4ms
 [0.384s][info ][gc,phases     ] GC(0)   Merge Heap Roots: 0.2ms
 [0.384s][info ][gc,phases     ] GC(0)   Evacuate Collection Set: 40.2ms
 [0.384s][info ][gc,phases     ] GC(0)   Post Evacuate Collection Set: 9.3ms
 [0.384s][info ][gc,phases     ] GC(0)   Other: 2.8ms
-# 收集完成的结果，可以看到51个新生代region全部被收集，有些对象晋升到老年区(Old regions)
+
+# 收集完成的结果，可以看到51个新生代region全部被回收，少部分对象转移到Survivor区，大部分对象晋升到老年区(Old regions)
 [0.384s][info ][gc,heap       ] GC(0) Eden regions: 51->0(44)
 [0.384s][info ][gc,heap       ] GC(0) Survivor Survivor: 0->7(7)
 [0.384s][info ][gc,heap       ] GC(0) Old regions: 0->43
@@ -147,6 +155,7 @@ G1中有两种回收模式：
 [0.384s][info ][gc,cpu        ] GC(0) User=0.15s Sys=0.10s Real=0.06s
 ```
 
+
 ### 2.2 混合GC
 
 混合GC是把一部分老年区的region加到Eden和Survivor后面，合并起来称为Collection Set，在下一次混合GC的时候，将这些老年区一并清理。G1收集器如何决定把哪些老年区Region进行回收呢？这就是并发标记阶段需要做的事情。
@@ -154,6 +163,173 @@ G1中有两种回收模式：
 #### 2.2.1 并发标记
 
 并发标记的目的是标记每个Region中的存活对象，当堆内存的总体使用比例达到一定的数值，就会触发并发标记，默认为45%，可以通过JVM参数InitiatingHeapOccupancyPercent进行设置。标记存活对象时，是通过可达性分析算法来实现的，至于标记过程中产生的“对象消失”问题，G1使用原始快照(Snapshot At The Beginning, SATB)和写屏障的方法来解决。每个Region中都包含bottm,end,top,prevTAMS和NextTAMS指针。
+
+#### 2.1.2 新生代的对象晋升到老年区的时机<a id="jinsheng"></a>
+
+##### 2.1.2.1 根据对象年龄晋升
+
+G1采用了分代收集来管理堆内存，在Young GC时就需要决策哪些存活对象应当放在新生代中，哪些存活对象放入老年代中。为了做到这一点，虚拟机在每个对象定义了一个对象年龄计数器，存储在对象头中。新对象一般会被分配到Eden Region中（大对象除外），如果经过第一次Young GC后仍然存活，并且能被转移到Survivor Region的话，将其年龄对象设置为1岁。对象在Survivor区中每熬过依次 Young GC，年龄就会增加一岁，当年龄达到设置的阈值，就会晋升为老年代，这个阈值可以通过参数-XX:MaxTenuringThreshold设置，下面进行验证。
+
+测试代码如下：
+
+```java
+public class G1GCTest {
+    public static void main(String[] args) {
+        int _1M = 1024 * 1024;
+        byte[] b1, b2, b3;
+        b1 = new byte[_1M / 3];
+        b2 = new byte[_1M * 2];
+        b3 = new byte[_1M * 2];
+        b3 = null;
+        b3 = new byte[_1M * 2];
+    }
+}
+```
+
+
+
+当虚拟机参数如下时：
+
+```
+ -XX:+UseG1GC -XX:G1HeapRegionSize=1m -XX:MaxTenuringThreshold=1 -Xms10M -Xmx10M 
+```
+
+实验结果如下：
+
+```
+# 第一次GC
+[0.026s][info ][gc,heap       ] GC(0) Eden regions: 1->0(1)
+[0.026s][info ][gc,heap       ] GC(0) Survivor regions: 0->1(1)
+[0.026s][info ][gc,heap       ] GC(0) Old regions: 0->0
+[0.026s][info ][gc,heap       ] GC(0) Archive regions: 2->2
+[0.026s][info ][gc,heap       ] GC(0) Humongous regions: 3->3
+
+# 为下一次标记做准备，具体原因不清楚
+[0.026s][info ][gc            ] GC(1) Concurrent Undo Cycle
+[0.026s][info ][gc,marking    ] GC(1) Concurrent Cleanup for Next Mark
+[0.026s][debug][gc,ergo       ] GC(1) Running G1 Clear Bitmap with 1 workers for 1 work units.
+
+# 第二次GC
+[0.027s][info ][gc,heap       ] GC(2) Eden regions: 0->0(1)
+[0.027s][info ][gc,heap       ] GC(2) Survivor regions: 1->0(1)
+[0.027s][info ][gc,heap       ] GC(2) Old regions: 0->1
+[0.027s][info ][gc,heap       ] GC(2) Archive regions: 2->2
+[0.027s][info ][gc,heap       ] GC(2) Humongous regions: 3->3
+```
+
+当设置的参数-XX:MaxTenuringThreshold=1时，b1对象会在第二次发生GC时进入老年代。
+
+
+
+当虚拟机参数如下：
+
+```
+-XX:+UseG1GC -XX:G1HeapRegionSize=1m -XX:MaxTenuringThreshold=3 -Xms10M -Xmx10M 
+```
+
+设置MaxTenuringThreshold=3，发现b1对象在第四次GC时才进入到老年代中
+
+```
+# 第一次GC
+[0.027s][info ][gc,heap       ] GC(0) Eden regions: 1->0(1)
+[0.027s][info ][gc,heap       ] GC(0) Survivor regions: 0->1(1)
+[0.027s][info ][gc,heap       ] GC(0) Old regions: 0->0
+[0.027s][info ][gc,heap       ] GC(0) Archive regions: 2->2
+[0.027s][info ][gc,heap       ] GC(0) Humongous regions: 3->3
+
+# 第二次GC
+[0.029s][info ][gc,heap       ] GC(2) Eden regions: 0->0(1)
+[0.029s][info ][gc,heap       ] GC(2) Survivor regions: 1->1(1)
+[0.029s][info ][gc,heap       ] GC(2) Old regions: 0->0
+[0.029s][info ][gc,heap       ] GC(2) Archive regions: 2->2
+[0.029s][info ][gc,heap       ] GC(2) Humongous regions: 3->3
+
+# 第三次GC
+[0.030s][info ][gc,heap       ] GC(3) Eden regions: 0->0(1)
+[0.030s][info ][gc,heap       ] GC(3) Survivor regions: 1->1(1)
+[0.030s][info ][gc,heap       ] GC(3) Old regions: 0->0
+[0.030s][info ][gc,heap       ] GC(3) Archive regions: 2->2
+[0.030s][info ][gc,heap       ] GC(3) Humongous regions: 6->3
+
+# 第四次GC
+[0.031s][info ][gc,heap       ] GC(5) Eden regions: 0->0(1)
+[0.031s][info ][gc,heap       ] GC(5) Survivor regions: 1->0(1)
+[0.031s][info ][gc,heap       ] GC(5) Old regions: 0->1
+[0.031s][info ][gc,heap       ] GC(5) Archive regions: 2->2
+[0.031s][info ][gc,heap       ] GC(5) Humongous regions: 3->3
+```
+
+##### 2.1.2.1 动态对象判定
+
+如果在Survivor空间中相同年龄所有对象大小的总和大于Survivor空间的一般，年龄大于或等于该年龄的对象就可以直接进入老年代，无须等到MaxTenuringThreshold指定的年龄。
+
+测试代码：
+
+```java
+public class G1GCTest {
+    public static void main(String[] args) {
+        int _1M = 1024 * 1024;
+        byte[] b1, b2, b3, b4;
+        b1 = new byte[_1M / 3];
+        b2 = new byte[_1M / 3];
+        b3 = new byte[_1M * 2];
+        b4 = new byte[_1M * 2];
+        b4 = null;
+        b4 = new byte[_1M * 2];
+    }
+}
+```
+
+
+
+虚拟机参数：
+
+```
+-XX:+UseG1GC -XX:G1HeapRegionSize=1m -XX:MaxTenuringThreshold=3 -Xms10M -Xmx10M 
+```
+
+实验的日志：可以看到，在第二次GC中，Survivor regions中的数据就已经进入到了Old regions了，并不需要等到第四次GC。
+
+```
+# 第一次GC
+[0.038s][info ][gc,heap       ] GC(0) Eden regions: 1->0(1)
+[0.038s][info ][gc,heap       ] GC(0) Survivor regions: 0->1(1)
+[0.038s][info ][gc,heap       ] GC(0) Old regions: 0->0
+[0.038s][info ][gc,heap       ] GC(0) Archive regions: 2->2
+[0.038s][info ][gc,heap       ] GC(0) Humongous regions: 3->3
+
+#第二次GC
+[0.039s][info ][gc,heap       ] GC(2) Eden regions: 0->0(1)
+[0.039s][info ][gc,heap       ] GC(2) Survivor regions: 1->0(1)
+[0.039s][info ][gc,heap       ] GC(2) Old regions: 0->1
+[0.039s][info ][gc,heap       ] GC(2) Archive regions: 2->2
+[0.039s][info ][gc,heap       ] GC(2) Humongous regions: 3->3
+```
+
+
+
+### 2.2 混合GC
+
+混合GC是把一部分老年区的region和所有的新生代的Eden Region，合并起来称为Collection Set，在下一次混合GC的时候，将这些老年区一并清理。G1收集器如何决定把哪些老年区Region进行回收呢？这就是并发标记阶段需要做的事情。
+
+#### 2.2.1 并发标记
+
+并发标记的目的是标记每个Region中的存活对象，当堆内存的总体使用比例达到一定的数值，就会触发并发标记，默认为45%，可以通过JVM参数InitiatingHeapOccupancyPercent进行设置。
+
+在[新生代的对象晋升到老年区的时机](#jinsheng)的实验中，有下面的数据：
+实验中设置InitiatingHeapOccupancyPercent=60，此时看到堆内存已经占用5242880B，现在需要分配一个2097168B（2M）的大对象，阈值为6291456B（6M）,此时5242880B + 2097168B > 6291456B，就会触发下面的并发标记阶段(通过Young GC完成初始标记的工作)。
+
+```
+[0.024s][debug][gc,ergo,ihop  ] Request concurrent cycle initiation (occupancy higher than threshold) occupancy: 5242880B allocation request: 2097168B threshold: 6291456B (60.00) source: concurrent humongous allocation
+[0.024s][debug][gc,ergo       ] Request concurrent cycle initiation (requested by GC cause). GC cause: G1 Humongous Allocation
+...
+[0.025s][info ][gc,start      ] GC(0) Pause Young (Concurrent Start) (G1 Humongous Allocation)
+```
+
+
+
+标记存活对象是通过可达性分析算法来实现的，至于标记过程中产生的“对象消失”问题，G1使用原始快照(Snapshot At The Beginning, SATB)和写屏障的方法来解决。每个Region中都包含bottm, end, top, prevTAMS 和 NextTAMS 指针。
+
 
 ```c++
 # heapRegion.hpp文件
@@ -166,12 +342,21 @@ HeapWord* _next_top_at_mark_start;
 
 **全局并发标记的过程**
 
-- 初始标记：仅仅是标记一下GC Root能直接关联到的对象，并修改TAMS指针。
-- 并发标记：从GC Toot开始对堆中对象进行可达性分析，寻找要回收的对象。
-- 最终标记：G1 GC 清空 SATB 缓冲区，跟踪未被访问的存活对象，并执行引用处理。
-- 清除垃圾：在这个最后阶段，G1 GC 执行统计和 RSet 净化的 STW 操作。在统计期间，G1 GC 会识别完全空的区域和可供进行混合垃圾回收的区域。清理阶段在将空白区域重置并添加到空闲列表时为部分并发。注意完全空的region不会被加到CSet，都在这个阶段直接回收了。
 
-下面是完整的并发标记日志
+1. 初始标记：仅仅是标记一下GC Root能直接关联到的对象，并修改TAMS指针。这个阶段需要停顿线程，但耗时很短，而且是借用Young GC的时候同步完成的。
+
+2. 根区域扫描：扫描Survivor regions中队老年代的引用，并标记被引用的对象。该阶段可以和引用程序同时运行(非 STW)，摒弃只有完成该阶段后，才能开始下一次STW新生代的垃圾回收。
+
+3. 并发标记：从GC Toot开始对堆中对象进行可达性分析，标记存活对象。
+
+4. 最终标记：G1 GC 清空 SATB 缓冲区，跟踪未被访问的存活对象，并执行引用处理。
+
+5. 清除垃圾：在这个最后阶段，G1 GC 执行统计和 RSet 净化的 STW 操作。在统计期间，G1 GC 会识别完全空的区域和可供进行混合垃圾回收的区域。清理阶段在将空白区域重置并添加到空闲列表时为部分并发。注意完全空的region不会被加到CSet，都在这个阶段直接回收了。
+
+下面是完整的并发标记日志：
+
+可以看到，GC(1)时Young GC，并且后面标注(Concurrent Start)，说明这个Young GC也完成了全局并发标记的初始标记过程。这样，Young GC过后就直接进入根区域扫描阶段了(Concurrent Scan Root Regions)。
+
 
 ```
 # 新生代收集
@@ -207,13 +392,11 @@ HeapWord* _next_top_at_mark_start;
 [0.497s][info ][gc            ] GC(2) Pause Cleanup 553M->553M(1024M) 0.373ms
 ```
 
-##### 问题1<a id="question1"></a>
-
-​	是不是并发标记都要跟随在一次新生代的收集后面？如上面的GC(1) Pause Young (Concurrent Start)结束之后才开始并发标记，我发现基本都是这样。在后面会有[验证](#post_yanzheng1)。
 
 #### 2.2.2 混合GC
 
-​	在并发标记阶段后，G1 GC会尝试进行混合GC，但也不是每一次并发标记后都会执行MixedGC。下面的日志显示，在GC(6)中发生了一次新生代GC，这次GC过后就执行了并发标记，之后有5次的新生代收集，依然没有出现MixedGC，而是直接到了Full FC。
+​	在并发标记阶段后，G1 GC会尝试进行混合GC，但也不是每一次并发标记后都会执行Mixed GC。下面的日志显示，在GC(6)中发生了一次新生代 GC，这次GC过后就执行了并发标记，之后有5次的新生代收集，依然没有出现MixedGC，而是直接到了Full FC。
+
 
 ​	并发标记阶段有可能会被打断，GC(7)正在进行并发标记阶段，但触发了一个 "G1 Preventive Collection"。在并发标记的过程中，G1 预判当前堆中可用的空闲区域不足，无法满足即将到来的内存分配需求，因此决定提前进行一次 Young GC 来释放空间，避免内存不足的情况发生。
 
@@ -279,6 +462,10 @@ HeapWord* _next_top_at_mark_start;
 
 ###### 验证2.2.2.1 中的第一点
 
+1. 首先查看使用WhiteBox的API启动并发标记是什么样子的？
+
+下面先试验wb.g1StartConcMarkCycle()函数。
+
 ```java
   private static final int TOTAL_ELEMENTS = 10000;
   private static WhiteBox wb = WhiteBox.getWhiteBox();
@@ -302,11 +489,7 @@ HeapWord* _next_top_at_mark_start;
     }
 ```
 
-1. 首先查看使用WhiteBox的APi启动并发标记是什么样子的？
-
-可以看到，每次并发标记前，都会执行一次Young GC，整理顺带验证了[问题1](#question1)，不知道对不对？<a id="post_yanzheng1"></a>
-
-可以看到，单纯地调用 wb.g1StartConcMarkCycle();并不会执行后续的Mixed GC的操作。
+可以看到，单纯地调用 wb.g1StartConcMarkCycle()，只会执行并发标记阶段，并不会执行后续的Mixed GC的操作。
 
 ```
 [8.724s][debug][gc,ergo        ] Request concurrent cycle initiation (requested by GC cause). GC cause: WhiteBox Initiated Concurrent Mark
@@ -363,6 +546,7 @@ public static void main(String[] args) throws Exception {
                 counter.increment();
             }
         }
+         // 在LRU执行结束之后，执行依次Mixed GC
         startMixedGC();
     }
 
@@ -380,8 +564,7 @@ public static void main(String[] args) throws Exception {
 ```
 
 
-
-完整的Mixed GC日志
+得到完整的Mixed GC日志
 
 ```
 [10.177s][debug][gc,ergo,ihop   ] Request concurrent cycle initiation (occupancy higher than threshold) occupancy: 844103680B allocation request: 0B threshold: 495570703B (46.15) source: STW humongous allocation
@@ -410,9 +593,11 @@ public static void main(String[] args) throws Exception {
 
 
 
-3. 明白了MixedGC的完整执行流程，现在回到我们需要验证的第一点[验证的第一点](#yanzheng1)
 
-验证思路是：利用WhiteBox的Api启动Mixed GC，但是不等并发标记完成，依然不断地分配对象，看看是否会打断Mixed GC。
+3. 明白了MixedGC的完整执行流程，现在回到我们需要[验证的第一点](#yanzheng1)
+
+验证思路是：利用WhiteBox的API启动Mixed GC，但是不等并发标记阶段完成，依然不断地分配对象，看看是否会打断Mixed GC。
+
 
 测试代码
 
@@ -451,8 +636,7 @@ public static void main(String[] args) throws Exception {
 ```
 
 
-
-可以看到，在测试代码中，打开wb.g1StartConcMarkCycle();之后，并没有等待并发标记完成，在日志中可以看到，并发标记被打断了，后续的Mixed GC也没有执行。[验证1](#yanzheng1)得到验证
+可以看到，在测试代码中，打开wb.g1StartConcMarkCycle()；之后，并没有等待并发标记完成，在日志中可以看到，并发标记被打断了，后续的Mixed GC也没有执行。[验证1](#yanzheng1)得到验证
 
 ```
 # 并发标记前的 Young GC
@@ -491,7 +675,7 @@ public static void main(String[] args) throws Exception {
 
 
 
-##### 问题2<a id="question2"></a>
+##### 问题1<a id="question1"></a>
 
 ​	由完整的Mixed GC产生的问题。为什么完整的MixedGC中，会执行Pause Young (Prepare Mixed)，从具体的日志中可以看到Pause Young (Prepare Mixed)和 Pause Young (Mixed)做的事情一样的?
 
@@ -569,10 +753,6 @@ public static void main(String[] args) throws Exception {
 [11.198s][info ][gc,cpu         ] GC(302) User=0.01s Sys=0.00s Real=0.00s
 ```
 
-
-
-
-
 ## 3 获取Region信息
 
 在弄清楚了并发标记和混合GC的过程，下面实现获取Region信息。先通过日志了解Region的打印信息，然后再通过WhiteBox的API获取日志信息。
@@ -582,8 +762,7 @@ public static void main(String[] args) throws Exception {
 在打印日志中，加入虚拟机参数 *gc+liveness=trace* 便可以获取到具体的日志信息，完整的参数列别如下:
 
 ```
- -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:InitiatingHeapOccupancyPercent=50 -XX:G1MixedGCLiveThresholdPercent=85 -XX:+WhiteBoxAPI -XX:G1HeapRegionSize=2m -Xms1024m -Xmx1024m -XX:+UseG1GC -Xlog:gc*=info,gc+heap=debug,gc+ergo*=trace:/home/damowang/Tencent/project/Jdk_issue2/log/G1MixedGC.log:uptime,level,tags
-
+ -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:InitiatingHeapOccupancyPercent=50 -XX:G1MixedGCLiveThresholdPercent=85 -XX:+WhiteBoxAPI -XX:G1HeapRegionSize=2m -Xms1024m -Xmx1024m -XX:+UseG1GC -Xlog:gc*=info,gc+heap=debug,gc+ergo*=trace:./log/G1MixedGC.log:uptime,level,tags
 ```
 
 
@@ -794,7 +973,8 @@ void HeapRegionManager::iterate_dbarray(int oldSetLenth, objArrayOop arr, HeapRe
 }
 ```
 
-##### 问题3<a id="question3"></a>
+
+##### 获取老区Region的数量
 
 如何保证 get_old_set()接口能返回所有老区的信息，并且能获取老区的region数量？（后来知道）其实也可以直接通过 G1ColletedHeap的 uint old_regions_count() const { return _old_set.length(); } 方法获取。
 
@@ -821,7 +1001,8 @@ inline void HeapRegionSetBase::add(HeapRegion* hr) {
 }
 ```
 
-2. 通过实验证明
+
+2. 通过实验证明获取到的老区region的数量是正确的
 
 实验代码：
 
@@ -849,23 +1030,31 @@ inline void HeapRegionSetBase::add(HeapRegion* hr) {
             System.out.println("第" + i + "个：" + regionLen[i][0] + ' ' + regionLen[i][1] + ' ' + regionLen[i][2] + ' ' + regionLen[i][3]);
         }
     }
+/*
+ regionLen[i][0]： prev_live
+ regionLen[i][1]： next_live
+ regionLen[i][2]： used
+ regionLen[i][3]： region_size
+*/
 ```
 
 输出的结果
 
 ```
 每个Region的结果:
+	   prev   next   used  region_size
 第0个：961176 961176 961176 1048576
 第1个：875984 875984 875984 1048576
 ...
 第116个：525112 525112 525112 1048576
 第117个：262632 262632 262632 1048576
-
+可以看到，总共有118个old regions
 ```
 
 
 
-再查看日志证明：这是最后一次垃圾收集打印出来的信息堆栈，可以看到老年区有118个region，跟上面输出的结果是一样的。
+查看日志证明：这是最后一次垃圾收集打印出来的信息堆栈，可以看到老年区有118个regions，跟上面输出的结果是一样的。
+
 
 ```
 [10.199s][info ][gc,heap        ] GC(292) Eden regions: 0->0(51)
@@ -875,21 +1064,11 @@ inline void HeapRegionSetBase::add(HeapRegion* hr) {
 [10.199s][info ][gc,heap        ] GC(292) Humongous regions: 856->652
 ```
 
-
-
-在这里也发现一个有趣的现象，在周志明的《深入理解Java虚拟机——JVM高级特性与最佳实践》一书中，这样子介绍Humongous区域。
-
-```
-G1认为只要大小超过了一个Region容量一半的对象即可判定为大对象。...。G1的大多数行为都把Humongous Region作为老年代的一部分来看待。
-```
-
-在我们实际得到的结果中，老年代的 Old regions和大对象的Humongous regions是分开的，我们使用HeapRegion的方法is_old()来判断Region的分代时，也是不将Humongous regions当做老年代来看待的。
-
 #### 3.2.2 测试获得Region信息
 
 ##### 3.2.2.1 测试代码1
 
-在分配完所有对象之后，查看Region信息
+在分配完所有对象之后，查看Region信息。
 
 ```java
 public class TestLRUG1GCTest {
@@ -925,6 +1104,7 @@ public class TestLRUG1GCTest {
             total_usage += regionLen[i][2];
             System.out.println("第" + i + "个：" + regionLen[i][0] + ' ' + regionLen[i][1] + ' ' + regionLen[i][2] + ' ' + regionLen[i][3]);
         }
+        // 总的堆使用量
         System.out.println("总使用量: " + total_usage);
     }
 
@@ -960,8 +1140,7 @@ public class TestLRUG1GCTest {
 ```
 
 
-
-输出的日志
+输出的日志：在有些数据中，当前存活率，也就是next这一栏，跟pre或者used是一样的，说明当前标记后，该Region中没有需要删除的对象。
 
 ```
 每个Region的结果:
@@ -977,7 +1156,7 @@ public class TestLRUG1GCTest {
 总使用量: 83796256
 ```
 
-###### 问题4<a id="question4"></a>
+###### 问题2<a id="question2"></a>
 
 输出的内容如上面：可以观察到很有趣的现象，这样子测试的话，上一次标记后对象的存活量（Region）为0（这里不明白什么原因，望老师指教）。
 
@@ -1031,9 +1210,13 @@ public static void getOldGenInfo() {
 }
 ```
 
-###### 问题5<a id="question5"></a>
+
+###### 问题3<a id="question3"></a>
 
 输出的结果如下：可以看到自己写的代码中统计出来的老区的region的使用量跟使用MemoryPoolMXBean统计出来的堆使用量出入很大？问题出在哪里呢?
+
+我的猜测是MemoryPoolMXBean统计的是全部的老区(old regions + humongous regions )区域的使用量，我统计的仅仅是 old regions的使用量。
+
 
 ```
 // 这里数字跟上面的一样，我是跑一次实验，分开来叙述，这里的单位都是字节
@@ -1043,9 +1226,7 @@ Found pool: G1 Old Gen
 G1 Old Gen: usage after GC = 835543328(796.8M)
 ```
 
-我的猜测是MemoryPoolMXBean统计的是全部的老区(old regions + humongous regions )区域的使用量，我统计的仅仅是 old regions的使用量。
-
-**验证问题5**
+**验证问题3**
 
 我在WSL中编译的JDK源码，并在本地的IDEA进行开发（这可能是很笨的方法），没有办法从代码层面进行debug验证，下面通过测试进行验证。在原本的测试代码中，生成的大对象是 1M 的，刚好等于HeapRegion的大小，导致很多对象直接被分配到Humongous Region里面了，在我的测试代码中获取不到这部分区域。所以下面修改生成对象的方法，不允许生成大对象，只生成小对象。
 
@@ -1064,7 +1245,6 @@ G1 Old Gen: usage after GC = 835543328(796.8M)
 
 **猜想3**<a id="yanzheng3"></a>： 具体原因可能是在最后一次GC之后，程序还没有停止，仍然在分配对象，只是没有再触发GC。
 
-在有些数据中，当前存活率，也就是next这一栏，跟pre或者used是一样的，说明当前标记后，该Region中没有需要删除的对象。
 
 ```
 正在执行...
@@ -1103,7 +1283,8 @@ G1 Old Gen: usage after GC = 668835328（637.85M）
 
 
 
-继续改变测试方法来[验证猜想3](#yanzheng3)，这次使用WhiteBox启动依次混合GC，看看GC后的效果
+
+继续改变测试方法来[验证猜想3](#yanzheng3)，这次使用WhiteBox启动Mixed GC，看看GC后的效果
 
 ```java
 public static void main(String[] args){
@@ -1167,11 +1348,10 @@ G1 Old Gen: usage after GC = 394798592
 可以看到：Region从658变成了376个
 ```
 
-至此，[猜想3](#yanzheng3)得到验证，[问题5](#question5)也得到解决，不知道这样对不对，期望老师指导。
+至此，[猜想3](#yanzheng3)得到验证，[问题3](#question3)也得到解决，不知道这样对不对，期望老师指导。
 
 
-
-###### 问题6<a id="question6"></a>
+###### 问题4<a id="question4"></a>
 
 这里还有一个疑问，为什么每个Region的used大小都为 1048576(1M)，代码中分配的随机对象大小为 (100x1024 B 到 500x1024 B)，是怎么做到每个Region都塞满的呢？
 

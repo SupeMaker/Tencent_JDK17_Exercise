@@ -1,0 +1,177 @@
+[0.002s][debug][gc,heap] Minimum heap 10485760  Initial heap 10485760  Maximum heap 10485760
+[0.006s][info ][gc     ] Using G1
+[0.007s][debug][gc,ergo,heap] Expand the heap. requested expansion amount: 10485760B expansion amount: 10485760B
+[0.007s][debug][gc,ergo,refine] Initial Refinement Zones: green: 2560, yellow: 7680, red: 12800, min yellow size: 5120
+[0.008s][info ][gc,init       ] Version: 17.0.10+1-LTS (release)
+[0.008s][info ][gc,init       ] CPUs: 12 total, 12 available
+[0.008s][info ][gc,init       ] Memory: 3829M
+[0.008s][info ][gc,init       ] Large Page Support: Disabled
+[0.008s][info ][gc,init       ] NUMA Support: Disabled
+[0.008s][info ][gc,init       ] Compressed Oops: Enabled (32-bit)
+[0.008s][info ][gc,init       ] Heap Region Size: 1M
+[0.008s][info ][gc,init       ] Heap Min Capacity: 10M
+[0.008s][info ][gc,init       ] Heap Initial Capacity: 10M
+[0.008s][info ][gc,init       ] Heap Max Capacity: 10M
+[0.008s][info ][gc,init       ] Pre-touch: Disabled
+[0.008s][info ][gc,init       ] Parallel Workers: 10
+[0.008s][info ][gc,init       ] Concurrent Workers: 3
+[0.008s][info ][gc,init       ] Concurrent Refinement Workers: 10
+[0.008s][info ][gc,init       ] Periodic GC: Disabled
+[0.013s][info ][gc,metaspace  ] CDS archive(s) mapped at: [0x00007f6caf000000-0x00007f6cafbbb000-0x00007f6cafbbb000), size 12300288, SharedBaseAddress: 0x00007f6caf000000, ArchiveRelocationMode: 1.
+[0.013s][info ][gc,metaspace  ] Compressed class space mapped at: 0x00007f6cb0000000-0x00007f6cf0000000, reserved size: 1073741824
+[0.013s][info ][gc,metaspace  ] Narrow klass base: 0x00007f6caf000000, Narrow klass shift: 0, Narrow klass range: 0x100000000
+[0.029s][debug][gc,ergo,ihop  ] Request concurrent cycle initiation (occupancy higher than threshold) occupancy: 5242880B allocation request: 2097168B threshold: 6291456B (60.00) source: concurrent humongous allocation
+[0.029s][debug][gc,ergo       ] Request concurrent cycle initiation (requested by GC cause). GC cause: G1 Humongous Allocation
+[0.029s][debug][gc,heap       ] GC(0) Heap before GC invocations=0 (full 0):
+[0.029s][debug][gc,heap       ] GC(0)  garbage-first heap   total 10240K, used 4016K [0x00000000ff600000, 0x0000000100000000)
+[0.029s][debug][gc,heap       ] GC(0)   region size 1024K, 1 young (1024K), 0 survivors (0K)
+[0.029s][debug][gc,heap       ] GC(0)  Metaspace       used 73K, committed 320K, reserved 1114112K
+[0.029s][debug][gc,heap       ] GC(0)   class space    used 3K, committed 128K, reserved 1048576K
+[0.029s][debug][gc,ergo       ] GC(0) Initiate concurrent cycle (concurrent cycle initiation requested)
+[0.029s][info ][gc,start      ] GC(0) Pause Young (Concurrent Start) (G1 Humongous Allocation)
+[0.029s][info ][gc,task       ] GC(0) Using 2 workers of 10 for evacuation
+[0.029s][trace][gc,ergo,cset  ] GC(0) Start choosing CSet. Pending cards: 274 target pause time: 200.00ms
+[0.029s][trace][gc,ergo,cset  ] GC(0) Added young regions to CSet. Eden: 1 regions, Survivors: 0 regions, predicted eden time: 15.30ms, predicted base time: 10.00ms, target pause time: 200.00ms, remaining time: 174.70ms
+[0.029s][debug][gc,ergo       ] GC(0) Running G1 Merge Heap Roots using 2 workers for 1 regions
+[0.030s][debug][gc,ergo       ] GC(0) Running G1 Rebuild Free List Task using 2 workers for rebuilding free list of regions
+[0.030s][debug][gc,ergo,heap  ] GC(0) Heap expansion: short term pause time ratio 0.00% long term pause time ratio 0.00% threshold 7.69% pause time ratio 7.69% fully expanded true resize by 0B
+[0.030s][debug][gc,ergo,refine] GC(0) Concurrent refinement times: Logged Cards Scan time goal: 20.00ms Logged Cards Scan time: 0.04ms HCC time: 0.00ms
+[0.030s][trace][gc,ergo,refine] GC(0) Updating Refinement Zones: logged cards scan time: 0.043ms, processed cards: 265, goal time: 19.999ms
+[0.030s][debug][gc,ergo,refine] GC(0) Updated Refinement Zones: green: 2560, yellow: 7680, red: 12800
+[0.030s][info ][gc,phases     ] GC(0)   Pre Evacuate Collection Set: 0.1ms
+[0.030s][info ][gc,phases     ] GC(0)   Merge Heap Roots: 0.1ms
+[0.030s][info ][gc,phases     ] GC(0)   Evacuate Collection Set: 0.3ms
+[0.030s][info ][gc,phases     ] GC(0)   Post Evacuate Collection Set: 0.5ms
+[0.030s][info ][gc,phases     ] GC(0)   Other: 0.3ms
+[0.030s][info ][gc,heap       ] GC(0) Eden regions: 1->0(1)
+[0.030s][info ][gc,heap       ] GC(0) Survivor regions: 0->1(1)
+[0.030s][info ][gc,heap       ] GC(0) Old regions: 0->0
+[0.030s][info ][gc,heap       ] GC(0) Archive regions: 2->2
+[0.030s][info ][gc,heap       ] GC(0) Humongous regions: 3->3
+[0.030s][info ][gc,metaspace  ] GC(0) Metaspace: 73K(320K)->73K(320K) NonClass: 69K(192K)->69K(192K) Class: 3K(128K)->3K(128K)
+[0.030s][debug][gc,heap       ] GC(0) Heap after GC invocations=1 (full 0):
+[0.030s][debug][gc,heap       ] GC(0)  garbage-first heap   total 10240K, used 4677K [0x00000000ff600000, 0x0000000100000000)
+[0.030s][debug][gc,heap       ] GC(0)   region size 1024K, 1 young (1024K), 1 survivors (1024K)
+[0.030s][debug][gc,heap       ] GC(0)  Metaspace       used 73K, committed 320K, reserved 1114112K
+[0.030s][debug][gc,heap       ] GC(0)   class space    used 3K, committed 128K, reserved 1048576K
+[0.030s][info ][gc            ] GC(0) Pause Young (Concurrent Start) (G1 Humongous Allocation) 4M->4M(10M) 1.374ms
+[0.030s][info ][gc,cpu        ] GC(0) User=0.00s Sys=0.00s Real=0.00s
+[0.030s][info ][gc            ] GC(1) Concurrent Undo Cycle
+[0.030s][info ][gc,marking    ] GC(1) Concurrent Cleanup for Next Mark
+[0.030s][debug][gc,ergo,cset  ] Preventive GC, insufficient free regions. Predicted need 2. Curr Eden 0 (Pred 1). Curr Survivor 1 (Pred 1). Curr Old 0 (Pred 0) Free 4 Alloc 3
+[0.030s][debug][gc,ergo       ] GC(1) Running G1 Clear Bitmap with 1 workers for 1 work units.
+[0.030s][debug][gc,heap       ] GC(2) Heap before GC invocations=1 (full 0):
+[0.030s][debug][gc,heap       ] GC(2)  garbage-first heap   total 10240K, used 4677K [0x00000000ff600000, 0x0000000100000000)
+[0.030s][debug][gc,heap       ] GC(2)   region size 1024K, 1 young (1024K), 1 survivors (1024K)
+[0.030s][debug][gc,heap       ] GC(2)  Metaspace       used 73K, committed 320K, reserved 1114112K
+[0.030s][debug][gc,heap       ] GC(2)   class space    used 3K, committed 128K, reserved 1048576K
+[0.030s][info ][gc,start      ] GC(2) Pause Young (Normal) (G1 Preventive Collection)
+[0.030s][info ][gc,task       ] GC(2) Using 2 workers of 10 for evacuation
+[0.030s][trace][gc,ergo,cset  ] GC(2) Start choosing CSet. Pending cards: 143 target pause time: 200.00ms
+[0.030s][trace][gc,ergo,cset  ] GC(2) Added young regions to CSet. Eden: 0 regions, Survivors: 1 regions, predicted eden time: 0.20ms, predicted base time: 6.48ms, target pause time: 200.00ms, remaining time: 193.32ms
+[0.031s][debug][gc,ergo       ] GC(2) Running G1 Merge Heap Roots using 2 workers for 1 regions
+[0.031s][debug][gc,ergo       ] GC(2) Running G1 Rebuild Free List Task using 2 workers for rebuilding free list of regions
+[0.031s][debug][gc,ergo,heap  ] GC(2) Heap expansion: short term pause time ratio 4.55% long term pause time ratio 4.55% threshold 7.69% pause time ratio 7.69% fully expanded true resize by 0B
+[0.031s][debug][gc,ergo,refine] GC(2) Concurrent refinement times: Logged Cards Scan time goal: 20.00ms Logged Cards Scan time: 0.02ms HCC time: 0.00ms
+[0.031s][trace][gc,ergo,refine] GC(2) Updating Refinement Zones: logged cards scan time: 0.023ms, processed cards: 134, goal time: 20.000ms
+[0.031s][debug][gc,ergo,refine] GC(2) Updated Refinement Zones: green: 2560, yellow: 7680, red: 12800
+[0.031s][info ][gc,phases     ] GC(2)   Pre Evacuate Collection Set: 0.0ms
+[0.031s][info ][gc,phases     ] GC(2)   Merge Heap Roots: 0.1ms
+[0.031s][info ][gc,phases     ] GC(2)   Evacuate Collection Set: 0.2ms
+[0.031s][info ][gc,phases     ] GC(2)   Post Evacuate Collection Set: 0.2ms
+[0.031s][info ][gc,phases     ] GC(2)   Other: 0.1ms
+[0.031s][info ][gc,heap       ] GC(2) Eden regions: 0->0(1)
+[0.031s][info ][gc,heap       ] GC(2) Survivor regions: 1->1(1)
+[0.031s][info ][gc,heap       ] GC(2) Old regions: 0->0
+[0.031s][info ][gc,heap       ] GC(2) Archive regions: 2->2
+[0.031s][info ][gc,heap       ] GC(2) Humongous regions: 3->3
+[0.031s][info ][gc,metaspace  ] GC(2) Metaspace: 73K(320K)->73K(320K) NonClass: 69K(192K)->69K(192K) Class: 3K(128K)->3K(128K)
+[0.031s][debug][gc,heap       ] GC(2) Heap after GC invocations=2 (full 0):
+[0.031s][debug][gc,heap       ] GC(2)  garbage-first heap   total 10240K, used 4449K [0x00000000ff600000, 0x0000000100000000)
+[0.031s][debug][gc,heap       ] GC(2)   region size 1024K, 1 young (1024K), 1 survivors (1024K)
+[0.031s][debug][gc,heap       ] GC(2)  Metaspace       used 73K, committed 320K, reserved 1114112K
+[0.031s][debug][gc,heap       ] GC(2)   class space    used 3K, committed 128K, reserved 1048576K
+[0.031s][info ][gc            ] GC(2) Pause Young (Normal) (G1 Preventive Collection) 4M->4M(10M) 0.514ms
+[0.031s][info ][gc,cpu        ] GC(2) User=0.00s Sys=0.00s Real=0.00s
+[0.032s][info ][gc,marking    ] GC(1) Concurrent Cleanup for Next Mark 1.177ms
+[0.032s][info ][gc            ] GC(1) Concurrent Undo Cycle 1.226ms
+[0.032s][debug][gc,ergo,ihop  ] Request concurrent cycle initiation (occupancy higher than threshold) occupancy: 8388608B allocation request: 2097168B threshold: 6291456B (60.00) source: concurrent humongous allocation
+[0.032s][debug][gc,ergo       ] Request concurrent cycle initiation (requested by GC cause). GC cause: G1 Humongous Allocation
+[0.032s][debug][gc,heap       ] GC(3) Heap before GC invocations=2 (full 0):
+[0.032s][debug][gc,heap       ] GC(3)  garbage-first heap   total 10240K, used 7521K [0x00000000ff600000, 0x0000000100000000)
+[0.032s][debug][gc,heap       ] GC(3)   region size 1024K, 1 young (1024K), 1 survivors (1024K)
+[0.032s][debug][gc,heap       ] GC(3)  Metaspace       used 73K, committed 320K, reserved 1114112K
+[0.032s][debug][gc,heap       ] GC(3)   class space    used 3K, committed 128K, reserved 1048576K
+[0.032s][debug][gc,ergo       ] GC(3) Initiate concurrent cycle (concurrent cycle initiation requested)
+[0.032s][info ][gc,start      ] GC(3) Pause Young (Concurrent Start) (G1 Humongous Allocation)
+[0.032s][info ][gc,task       ] GC(3) Using 2 workers of 10 for evacuation
+[0.032s][trace][gc,ergo,cset  ] GC(3) Start choosing CSet. Pending cards: 145 target pause time: 200.00ms
+[0.032s][trace][gc,ergo,cset  ] GC(3) Added young regions to CSet. Eden: 0 regions, Survivors: 1 regions, predicted eden time: 0.13ms, predicted base time: 4.00ms, target pause time: 200.00ms, remaining time: 195.87ms
+[0.032s][debug][gc,ergo       ] GC(3) Running G1 Merge Heap Roots using 2 workers for 1 regions
+[0.032s][debug][gc,ergo       ] GC(3) Running G1 Rebuild Free List Task using 2 workers for rebuilding free list of regions
+[0.032s][debug][gc,ergo,heap  ] GC(3) Heap expansion: short term pause time ratio 58.65% long term pause time ratio 1.77% threshold 7.69% pause time ratio 7.69% fully expanded true resize by 0B
+[0.032s][debug][gc,ergo,refine] GC(3) Concurrent refinement times: Logged Cards Scan time goal: 20.00ms Logged Cards Scan time: 0.02ms HCC time: 0.00ms
+[0.032s][trace][gc,ergo,refine] GC(3) Updating Refinement Zones: logged cards scan time: 0.022ms, processed cards: 136, goal time: 20.000ms
+[0.032s][debug][gc,ergo,refine] GC(3) Updated Refinement Zones: green: 2560, yellow: 7680, red: 12800
+[0.032s][info ][gc,phases     ] GC(3)   Pre Evacuate Collection Set: 0.0ms
+[0.032s][info ][gc,phases     ] GC(3)   Merge Heap Roots: 0.1ms
+[0.032s][info ][gc,phases     ] GC(3)   Evacuate Collection Set: 0.2ms
+[0.032s][info ][gc,phases     ] GC(3)   Post Evacuate Collection Set: 0.2ms
+[0.032s][info ][gc,phases     ] GC(3)   Other: 0.1ms
+[0.032s][info ][gc,heap       ] GC(3) Eden regions: 0->0(1)
+[0.032s][info ][gc,heap       ] GC(3) Survivor regions: 1->1(1)
+[0.032s][info ][gc,heap       ] GC(3) Old regions: 0->0
+[0.032s][info ][gc,heap       ] GC(3) Archive regions: 2->2
+[0.032s][info ][gc,heap       ] GC(3) Humongous regions: 6->3
+[0.032s][info ][gc,metaspace  ] GC(3) Metaspace: 73K(320K)->73K(320K) NonClass: 69K(192K)->69K(192K) Class: 3K(128K)->3K(128K)
+[0.032s][debug][gc,heap       ] GC(3) Heap after GC invocations=3 (full 0):
+[0.032s][debug][gc,heap       ] GC(3)  garbage-first heap   total 10240K, used 4452K [0x00000000ff600000, 0x0000000100000000)
+[0.032s][debug][gc,heap       ] GC(3)   region size 1024K, 1 young (1024K), 1 survivors (1024K)
+[0.032s][debug][gc,heap       ] GC(3)  Metaspace       used 73K, committed 320K, reserved 1114112K
+[0.032s][debug][gc,heap       ] GC(3)   class space    used 3K, committed 128K, reserved 1048576K
+[0.032s][info ][gc            ] GC(3) Pause Young (Concurrent Start) (G1 Humongous Allocation) 7M->4M(10M) 0.537ms
+[0.032s][info ][gc,cpu        ] GC(3) User=0.00s Sys=0.00s Real=0.00s
+[0.032s][info ][gc            ] GC(4) Concurrent Undo Cycle
+[0.032s][info ][gc,marking    ] GC(4) Concurrent Cleanup for Next Mark
+[0.032s][debug][gc,ergo       ] GC(4) Running G1 Clear Bitmap with 1 workers for 1 work units.
+[0.032s][debug][gc,ergo,cset  ] Preventive GC, insufficient free regions. Predicted need 2. Curr Eden 0 (Pred 1). Curr Survivor 1 (Pred 1). Curr Old 0 (Pred 0) Free 4 Alloc 3
+[0.032s][debug][gc,heap       ] GC(5) Heap before GC invocations=3 (full 0):
+[0.032s][debug][gc,heap       ] GC(5)  garbage-first heap   total 10240K, used 4452K [0x00000000ff600000, 0x0000000100000000)
+[0.032s][debug][gc,heap       ] GC(5)   region size 1024K, 1 young (1024K), 1 survivors (1024K)
+[0.032s][debug][gc,heap       ] GC(5)  Metaspace       used 73K, committed 320K, reserved 1114112K
+[0.032s][debug][gc,heap       ] GC(5)   class space    used 3K, committed 128K, reserved 1048576K
+[0.032s][info ][gc,start      ] GC(5) Pause Young (Normal) (G1 Preventive Collection)
+[0.032s][info ][gc,task       ] GC(5) Using 2 workers of 10 for evacuation
+[0.032s][trace][gc,ergo,cset  ] GC(5) Start choosing CSet. Pending cards: 144 target pause time: 200.00ms
+[0.032s][trace][gc,ergo,cset  ] GC(5) Added young regions to CSet. Eden: 0 regions, Survivors: 1 regions, predicted eden time: 0.08ms, predicted base time: 3.05ms, target pause time: 200.00ms, remaining time: 196.87ms
+[0.032s][info ][gc,marking    ] GC(4) Concurrent Cleanup for Next Mark 0.103ms
+[0.032s][debug][gc,ergo       ] GC(5) Running G1 Merge Heap Roots using 2 workers for 1 regions
+[0.033s][debug][gc,ergo       ] GC(5) Running G1 Rebuild Free List Task using 2 workers for rebuilding free list of regions
+[0.033s][debug][gc,ergo,heap  ] GC(5) Heap expansion: short term pause time ratio 39.45% long term pause time ratio 3.47% threshold 7.69% pause time ratio 7.69% fully expanded true resize by 0B
+[0.033s][debug][gc,ergo,refine] GC(5) Concurrent refinement times: Logged Cards Scan time goal: 20.00ms Logged Cards Scan time: 0.02ms HCC time: 0.00ms
+[0.033s][trace][gc,ergo,refine] GC(5) Updating Refinement Zones: logged cards scan time: 0.022ms, processed cards: 135, goal time: 20.000ms
+[0.033s][debug][gc,ergo,refine] GC(5) Updated Refinement Zones: green: 2560, yellow: 7680, red: 12800
+[0.033s][info ][gc,phases     ] GC(5)   Pre Evacuate Collection Set: 0.0ms
+[0.033s][info ][gc,phases     ] GC(5)   Merge Heap Roots: 0.1ms
+[0.033s][info ][gc,phases     ] GC(5)   Evacuate Collection Set: 0.1ms
+[0.033s][info ][gc,phases     ] GC(5)   Post Evacuate Collection Set: 0.1ms
+[0.033s][info ][gc,phases     ] GC(5)   Other: 0.1ms
+[0.033s][info ][gc,heap       ] GC(5) Eden regions: 0->0(1)
+[0.033s][info ][gc,heap       ] GC(5) Survivor regions: 1->0(1)
+[0.033s][info ][gc,heap       ] GC(5) Old regions: 0->1
+[0.033s][info ][gc,heap       ] GC(5) Archive regions: 2->2
+[0.033s][info ][gc,heap       ] GC(5) Humongous regions: 3->3
+[0.033s][info ][gc,metaspace  ] GC(5) Metaspace: 73K(320K)->73K(320K) NonClass: 69K(192K)->69K(192K) Class: 3K(128K)->3K(128K)
+[0.033s][debug][gc,heap       ] GC(5) Heap after GC invocations=4 (full 0):
+[0.033s][debug][gc,heap       ] GC(5)  garbage-first heap   total 10240K, used 4451K [0x00000000ff600000, 0x0000000100000000)
+[0.033s][debug][gc,heap       ] GC(5)   region size 1024K, 0 young (0K), 0 survivors (0K)
+[0.033s][debug][gc,heap       ] GC(5)  Metaspace       used 73K, committed 320K, reserved 1114112K
+[0.033s][debug][gc,heap       ] GC(5)   class space    used 3K, committed 128K, reserved 1048576K
+[0.033s][info ][gc            ] GC(5) Pause Young (Normal) (G1 Preventive Collection) 4M->4M(10M) 0.439ms
+[0.033s][info ][gc,cpu        ] GC(5) User=0.00s Sys=0.00s Real=0.00s
+[0.033s][info ][gc            ] GC(4) Concurrent Undo Cycle 0.615ms
+[0.034s][info ][gc,heap,exit  ] Heap
+[0.034s][info ][gc,heap,exit  ]  garbage-first heap   total 10240K, used 7533K [0x00000000ff600000, 0x0000000100000000)
+[0.034s][info ][gc,heap,exit  ]   region size 1024K, 1 young (1024K), 0 survivors (0K)
+[0.034s][info ][gc,heap,exit  ]  Metaspace       used 73K, committed 320K, reserved 1114112K
+[0.034s][info ][gc,heap,exit  ]   class space    used 3K, committed 128K, reserved 1048576K
