@@ -155,15 +155,6 @@ G1中有两种回收模式：
 [0.384s][info ][gc,cpu        ] GC(0) User=0.15s Sys=0.10s Real=0.06s
 ```
 
-
-### 2.2 混合GC
-
-混合GC是把一部分老年区的region加到Eden和Survivor后面，合并起来称为Collection Set，在下一次混合GC的时候，将这些老年区一并清理。G1收集器如何决定把哪些老年区Region进行回收呢？这就是并发标记阶段需要做的事情。
-
-#### 2.2.1 并发标记
-
-并发标记的目的是标记每个Region中的存活对象，当堆内存的总体使用比例达到一定的数值，就会触发并发标记，默认为45%，可以通过JVM参数InitiatingHeapOccupancyPercent进行设置。标记存活对象时，是通过可达性分析算法来实现的，至于标记过程中产生的“对象消失”问题，G1使用原始快照(Snapshot At The Beginning, SATB)和写屏障的方法来解决。每个Region中都包含bottm,end,top,prevTAMS和NextTAMS指针。
-
 #### 2.1.2 新生代的对象晋升到老年区的时机<a id="jinsheng"></a>
 
 ##### 2.1.2.1 根据对象年龄晋升
