@@ -27,7 +27,7 @@ HeapWord* G1CollectedHeap::attempt_allocation_humongous(size_t word_size) {
 
 2.2 然后是need_to_start_conc_mark函数，照片比较规整好看，这里用照片
 
-```
+```c++
 // src/hotspot/share/gc/g1/g1Policy.cpp
 ```
 
@@ -146,4 +146,3 @@ public class G1GCTest {
 [0.367s][info ][gc,heap       ] GC(0) Archive regions: 2->2
 [0.367s][info ][gc,heap       ] GC(0) Humongous regions: 3->3
 ```
-
